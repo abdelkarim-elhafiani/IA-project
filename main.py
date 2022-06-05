@@ -13,6 +13,6 @@ def print_hi(name):
 if __name__ == '__main__':
     print_hi('PyCharm')
     age_net,gender_net=initialize_caffe_models()
-    read_from_camera(age_net,gender_net)
+    read_from_image(age_net,gender_net)
 
 
