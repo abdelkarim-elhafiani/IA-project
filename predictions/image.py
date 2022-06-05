@@ -6,11 +6,11 @@ gender_list = ['Male', 'Female']
 
 def initialize_caffe_models():
     age_net = cv2.dnn.readNetFromCaffe(
-        'deploy_age.prototxt',
+        'age_deploy.prototxt',
         'age_net.caffemodel'
     )
     gender_net = cv2.dnn.readNetFromCaffe(
-        'deploy_gender.prototxt',
+        'gender_deploy.prototxt',
         'gender_net.caffemodel'
     )
     return(age_net, gender_net)
