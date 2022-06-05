@@ -1,6 +1,7 @@
 
 from predictions.camera import initialize_caffe_models
 from predictions.camera import read_from_camera
+from predictions.image import read_from_image
 
 
 def print_hi(name):
@@ -12,6 +13,6 @@ def print_hi(name):
 if __name__ == '__main__':
 
     age_net,gender_net=initialize_caffe_models()
-    read_from_camera(age_net,gender_net)
+    read_from_image(age_net,gender_net)
 
 
