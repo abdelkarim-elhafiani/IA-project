@@ -1,16 +1,17 @@
-# This is a sample Python script.
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from predictions.camera import initialize_caffe_models
+from predictions.camera import read_from_camera
 
 
 def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+
+    print(f'Hi, {name}')
 
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
     print_hi('PyCharm')
+    age_net,gender_net=initialize_caffe_models()
+    read_from_camera(age_net,gender_net)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
