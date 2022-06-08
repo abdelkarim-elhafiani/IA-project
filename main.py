@@ -1,7 +1,5 @@
 
-from predictions.camera import initialize_caffe_models
-from predictions.camera import read_from_camera
-from predictions.image import read_from_image
+from predictions.detection_robot import Detection_robot
 
 
 def print_hi(name):
@@ -10,9 +8,10 @@ def print_hi(name):
 
 
 
-if __name__ == '__main__':
+myRobot = Detection_robot()
 
-    age_net,gender_net=initialize_caffe_models()
-    read_from_image(age_net,gender_net)
+myRobot.start()
+
+
 
 
