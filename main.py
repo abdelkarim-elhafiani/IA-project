@@ -1,17 +1,14 @@
 
 from predictions.detection_robot import Detection_robot
+from predictions.functionalities.init import init
 
 
-def print_hi(name):
+if __name__ == '__main__':
 
-    print(f'Hi, {name}')
+    detection_robot = Detection_robot()
 
+    detection_robot.start()
 
-
-myRobot = Detection_robot()
-
-myRobot.start()
-
-
-
-
+    detection_robot.read_from_youtube("https://www.youtube.com/watch?v=C6ohRM48oAc&list=RDC6ohRM48oAc&start_radio=1")
+    #detection_robot.read_from_image("images/sample1.jpg")
+    #detection_robot.read_from_camera()
