@@ -1,7 +1,6 @@
 from tkinter import W
 import cv2, pafy
 
-from predictions.functionalities.init import init
 import numpy as np
 from keras.models import model_from_json
 
@@ -36,7 +35,11 @@ class Detection_robot:
     #de configuration et aussi de la data dont elles notre Ai aura besoin
     #pour faire la détection de Visage|Age|Sex|Emotion
     def start(self):
-        (self.age_net,self.gender_net) = init()
+        age_net =cv2.dnn.readNetFromCaffe(
+            'age_deploy.prototxt','age_net.caffemodel')
+        gender_net=cv2.dnn.readNetFromCaffe(
+            'gender_deploy.prototxt','gender_net.caffemodel')
+
         self.face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')     
         # on charge notre fichier json et on creer notre model
         json_file = open("Emotion_model/emotion_model.json","r")
