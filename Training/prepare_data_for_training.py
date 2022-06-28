@@ -8,7 +8,7 @@ class PrepareDataForTraining:
     def __init__(self, data_name):
         self.data_name = data_name
 
-    def get_emotion_data():
+    def get_emotion_data(self):
         # pre-traitement des images
         train_data_gen = ImageDataGenerator(rescale=1. / 255)
         test_data_gen = ImageDataGenerator(rescale=1. / 255)
@@ -34,7 +34,7 @@ class PrepareDataForTraining:
         )
         return train_generator,test_generator
 
-    def get_age_or_gender_data():
+    def get_data(self):
         path = "Data_Used_For_Training"
         images = []
         age = []
@@ -49,8 +49,13 @@ class PrepareDataForTraining:
             age.append(np.array(ages))
             gender.append(np.array(genders))
 
-        if data_name == "age_data":
+        if self.data_name == "age_data":
             return age,images
 
-        elif data_name == "gender_data":
+        elif self.data_name == "gender_data":
             return gender,images
+
+        elif self.data_name == "emotion_data":
+
+            train_generator,test_generator = self.get_emotion_data()
+            return train_generator,test_generator

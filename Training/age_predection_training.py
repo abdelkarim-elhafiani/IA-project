@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential,load_model,Model
 from keras.layers import Conv2D,MaxPool2D,Dense,Dropout,BatchNormalization,Flatten,Input
 from sklearn.model_selection import train_test_split
+from keras.callbacks import ModelCheckpoint
 
-from training.prepare_data_for_training import prepare_data_for_training
+from Training.prepare_data_for_training import PrepareDataForTraining
 
-age,images = prepare_data_for_training("age_data")
+dataHandler  =  PrepareDataForTraining("age_data")
+age,images = dataHandler.get_data()
 
 age = np.array(age,dtype=np.int64)
 images = np.array(images) 
@@ -33,8 +35,9 @@ age_model.add(Dense(1, activation='linear', name='age'))
               
 age_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
                            
-history_age = age_model.fit(x_train_age, y_train_age,
-                        validation_data=(x_test_age, y_test_age), epochs=10)
-
-age_model.save('models/age_model.h5')
-
+check_point = ModelCheckpoint("models/age_model-{epoch:03d}.h5",
+                                monitor="val_loss",verbose=0,
+                                save_best_only=True,mode="auto")
+                                
+age_model.fit(x_train_age, y_train_age,
+                    epochs=5, callbacks=[check_point],validation_split=0.1)

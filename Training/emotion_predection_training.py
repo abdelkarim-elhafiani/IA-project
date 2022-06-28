@@ -9,7 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 dataHandler = PrepareDataForTraining("emotion_data")
 
-train_generator,test_generator = dataHandler.get_emotion_data()
+train_generator,test_generator = dataHandler.get_data()
 
 emotion_model = keras.Sequential()  #on utilise le model sequentiel
 

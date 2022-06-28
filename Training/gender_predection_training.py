@@ -5,10 +5,15 @@ import cv2
 from keras.models import Sequential,load_model,Model
 from keras.layers import Conv2D,MaxPool2D,Dense,Dropout,BatchNormalization,Flatten,Input
 from sklearn.model_selection import train_test_split
+from keras.callbacks import ModelCheckpoint
 
-from training.prepare_data_for_training import prepare_data_for_training
 
-gender,images = prepare_data_for_training("gender_data")
+from Training.prepare_data_for_training import PrepareDataForTraining
+
+
+dataHandler = PrepareDataForTraining("gender_data")
+
+gender,images = dataHandler.prepare_data_for_training()
 
 gender = np.array(gender,dtype=np.int64)
 images = np.array(images)
@@ -42,7 +47,9 @@ gender_model.compile(optimizer='adam',
                         loss='binary_crossentropy',
                         metrics=['accuracy'])
 
-history_gender = gender_model.fit(x_train_gender, y_train_gender,
-                        validation_data=(x_test_gender, y_test_gender), epochs=10)
+check_point = ModelCheckpoint("models/gender_model-{epoch:03d}.model",
+                                monitor="val_loss",verbose=0,
+                                save_best_only=True,mode="auto")
 
-gender_model.save('models/gender_model.h5')
+gender_model.fit(x_train_gender, y_train_gender,
+                        epochs=5, callbacks=[check_point],validation_split=0.1)
