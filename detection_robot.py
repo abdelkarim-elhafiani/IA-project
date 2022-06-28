@@ -49,7 +49,6 @@ class Detection_robot:
         self.emotion_model = model_from_json(loaded_model_json)
         # puis on applique les métriques calculés grace à l'apprentissage
         self.emotion_model.load_weights("Emotion_model/emotion_model.h5")
-        print("Chargement des models à partir du disque effectué")
     
     def read_from_camera(self):
 
