@@ -1,8 +1,11 @@
 from tkinter import W
 import cv2, pafy
-
+import cvlib as cv
 import numpy as np
 from keras.models import model_from_json
+from keras.models import load_model
+from keras.preprocessing.image import img_to_array
+
 
 # from predictions.functionalities.camera_detection import read_from_camera
 
@@ -11,12 +14,12 @@ class Detection_robot:
     def __init__(self):
         self.frame = None
         self.ret = False
-        self.gender_net = None
-        self.age_net = None
-        self.face_net = None
+        self.gender_model = None
+        self.age_model = None
+        self.emotion_model = None
+
         self.MODEL_MEAN_VALUE = (78.4263377603,87.7689143744,114.895847746)
-        self.age_list = ['(0,2)','(4,6)','(8,12)','(15,20)','(25,32)',
-                        '(38,43)','(48,53)','(60,100)']
+
         self.gender_list = ['Male','Female']
         self.emotion_list = {0 : "angry",1 : "disgusted",
         2 : "fearful",3 : "happy",
@@ -28,27 +31,23 @@ class Detection_robot:
         4 : (255,255,255),5 :(255,0,0),
         6 : (255,255,0)}
 
-        self.face_cascade = None
-        self.emotion_model = None
 
     #le role de cette fonction c'est de charger tous les modules et les fichiers
     #de configuration et aussi de la data dont elles notre Ai aura besoin
     #pour faire la détection de Visage|Age|Sex|Emotion
     def start(self):
-        age_net =cv2.dnn.readNetFromCaffe(
-            'age_deploy.prototxt','age_net.caffemodel')
-        gender_net=cv2.dnn.readNetFromCaffe(
-            'gender_deploy.prototxt','gender_net.caffemodel')
+        # on charge nos modeles age et gender 
+        self.age_model = load_model('models/age_model-005.h5')
+        self.gender_model = load_model('models/gender_model-005.model')
 
-        self.face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')     
         # on charge notre fichier json et on creer notre model
-        json_file = open("Emotion_model/emotion_model.json","r")
+        json_file = open("models/emotion_model.json","r")
         loaded_model_json = json_file.read()
         json_file.close()
         # on charge le model à partir du fichier json
         self.emotion_model = model_from_json(loaded_model_json)
         # puis on applique les métriques calculés grace à l'apprentissage
-        self.emotion_model.load_weights("Emotion_model/emotion_model.h5")
+        self.emotion_model.load_weights("models/emotion_model.h5")
     
     def read_from_camera(self):
 
@@ -102,16 +101,13 @@ class Detection_robot:
     #cette fonction s'occupe de la detection des visages
     # qui se trouvent dans une image
     def face_detection(self):
-        gray = cv2.cvtColor(self.frame,cv2.COLOR_BGR2GRAY)
-        faces =  self.face_cascade.detectMultiScale(gray,1.1,5)
-
+        faces, confidence = cv.detect_face(self.frame)
         return faces
 
     #cette fonction s'occupe de la totalité des processus qui s'applique
     #sur une image afin de faire la détection souhaitée
     def detection_process(self):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        gray_frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         # pour chaque image on essaye de détecter les visages
         #faces = self.face_detection()
         faces = self.face_detection()
@@ -119,46 +115,52 @@ class Detection_robot:
         # si il y a au moins un visage détecté on applique nos processus de prédiction
         # d'age et le sex et aussi les emotion de ce visage la
         if(len(faces)>0) :
-
             # on boucle sur les visages détectés afin d'appliquer les processus de prédiction
             # pour chaque visage
-            for (x,y,w,h) in faces :
-                face_image = self.frame[y:y+h,h:h+w].copy()
-                face_image_blob = cv2.dnn.blobFromImage(
-                    face_image,1,(227,227),
-                    self.MODEL_MEAN_VALUE,
-                    swapRB=False)
+            for (startX,startY,endX,endY) in faces :
 
-                age = self.age_detection(face_image_blob)
-                gendre = self.gendre_detection(face_image_blob)
-                (emotion, emotion_color) = self.emotion_detection(face_image)
-                cv2.rectangle(self.frame,(x,y),(x+w,y+h),(255,0,0),2)
+                face_crop = np.copy(self.frame[startY:endY,startX:endX])
+                age = self.age_detection(face_crop)
+                gender = self.gender_detection(face_crop)
+                (emotion, emotion_color) = self.emotion_detection(face_crop)
 
-                overlay_text = gendre +' | '+ age
+            
+                cv2.rectangle(self.frame, (startX,startY), (endX,endY), (0,255,0), 2)
+
+                overlay_text = gender +' | '+ age
                 cv2.putText(self.frame,
-                overlay_text,(x,y),font,1,
+                overlay_text,(startX,startY),font,1,
                 emotion_color,2,cv2.LINE_AA)
                 cv2.putText(self.frame,emotion,
-                (x+5,y-40),
+                (startX+5,startY-40),
                 font,1.2,emotion_color,2,cv2.LINE_AA)
 
     #cette fonction s'occupe de la detection de sex
     #à partir d'un visage passé en parametre
-    def gendre_detection(self, face_image_blob):
-        self.gender_net.setInput(face_image_blob)
-        gender_preds = self.gender_net.forward()
-        gender = self.gender_list[gender_preds[0].argmax()]
+    def gender_detection(self, face_crop):
+        face_crop = cv2.resize(face_crop, (96,96))
+        face_crop = face_crop.astype("float") / 255.0
+        face_crop = img_to_array(face_crop)
+        face_crop = np.expand_dims(face_crop, axis=0)
+        conf = self.gender_model.predict(face_crop)[0]
+
+        idx = np.argmax(conf)
+        gender = self.gender_list[idx]
 
         return gender
 
     #cette fonction s'occupe de la detection d'age
     #à partir d'un visage passé en parametre
-    def age_detection(self, face_image_blob):
-        self.age_net.setInput(face_image_blob)
-        age_preds = self.age_net.forward()
-        age = self.age_list[age_preds[0].argmax()]
-        
-        return age
+    def age_detection(self, face_crop):
+
+        face_crop = cv2.resize(face_crop,(200,200),interpolation=cv2.INTER_AREA)
+
+        age_predict = self.age_model.predict(np.array(face_crop).reshape(-1,200,200,3))
+        age = round(age_predict[0,0])
+        age_estimation = (age // 5) * 5
+        age_label ="("+str(age_estimation)+","+str(age_estimation + 5)+")"
+
+        return age_label
 
     #cette fonction s'occupe de la detection de l'emotion
     #à partir d'un visage passé en parametre

@@ -1,6 +1,5 @@
 
 from detection_robot import Detection_robot
-from predictions.functionalities.init import init
 
 if __name__ == '__main__':
 
